@@ -29,7 +29,7 @@ public class Client
 
     public static final String AES = "AES";
 
-    public static final String BLOWFISH = "BLOWFISH";
+    public static final String BLOWFISH = "Blowfish";
 
     // ALGORITMOS ASIMÉTRICOS
 
@@ -61,10 +61,10 @@ public class Client
     {
         try
         {
-            setCanal(new Socket("localhost", pPuerto));
-            setInServidor(new BufferedReader(new InputStreamReader(getCanal().getInputStream())));
-            setInUsuario(in);
-            setOut(new PrintWriter(getCanal().getOutputStream(), true));
+            canal = new Socket("localhost", pPuerto);
+            inServidor = new BufferedReader(new InputStreamReader(canal.getInputStream()));
+            inUsuario = in;
+            out = new PrintWriter(canal.getOutputStream(), true);
         }
         catch (IOException e)
         {
