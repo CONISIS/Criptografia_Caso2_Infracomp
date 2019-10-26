@@ -7,12 +7,17 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
+
+import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
 
 /**
  * @author Juan
@@ -62,6 +67,10 @@ public class Client
     private BufferedReader inUsuario;
 
     private PrintWriter out;
+    
+    private String hmac = "";
+    
+    private String simetrico = "";
 
     // CONSTRUCTOR
 
@@ -160,7 +169,6 @@ public class Client
                                        "1) AES\n" +
                                        "2) Blowfish");
             int res1 = Integer.parseInt(getInUsuario().readLine());
-            String simetrico = "";
             simetrico = res1 == 1 ? AES : BLOWFISH;
             System.out.println("Seleccione el algoritmo HMAC que quiere :usar (1,2,3,4) \n" +
                                        "1) HmacSHA1\n" +
@@ -168,7 +176,6 @@ public class Client
                                        "3) HmacSHA384\n" +
                                        "4) HmacSHA512");
             int res2 = Integer.parseInt(getInUsuario().readLine());
-            String hmac = "";
             if (1 == res2)
                 hmac = SHA1;
             else if (2 == res2)
@@ -209,8 +216,19 @@ public class Client
         	System.exit(0);
 		}
     	
-    	PublicKey KW =  cert.getPublicKey();
-    	getOut().println();
+    	Key KW =  cert.getPublicKey();
+    	byte[] textoCifrado = null;
+    	try {
+			Cipher cifrador = Cipher.getInstance("RSA");
+			cifrador.init(Cipher.ENCRYPT_MODE, KW);
+			textoCifrado = cifrador.doFinal(Base64.getDecoder().decode(simetrico));
+			if(simetrico==AES) {
+				textoCifrado = cifrador.doFinal(Base64.getDecoder().decode(AES+"0"));
+			}
+		} catch (Exception e) {
+			System.out.println("Hubo un error cifrar el mensaje");
+		}
+    	getOut().println(textoCifrado);
     	
     }
 
