@@ -7,10 +7,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.security.PublicKey;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.util.Base64;
 
 /**
  * @author Juan
@@ -193,17 +195,23 @@ public class Client
      */
     public void comunicacion2(String certificado)
     {
-    	System.out.println(certificado);
-    	byte[] certEntryBytes = certificado.getBytes();
+    	byte[] certEntryBytes = Base64.getDecoder().decode(certificado);
     	InputStream in = new ByteArrayInputStream(certEntryBytes);
+    	X509Certificate cert = null;
     	try {
     		CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-    		X509Certificate cert = (X509Certificate) certFactory.generateCertificate(in);
+    		cert = (X509Certificate) certFactory.generateCertificate(in);
 			cert.checkValidity();
+			System.out.println("Certificado valido");  
+			in.close();
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println("El certificado no es valido.. terminado conexion");
+        	System.exit(0);
 		}
-        System.out.println("Certificado valido");  
+    	
+    	PublicKey KW =  cert.getPublicKey();
+    	getOut().println();
+    	
     }
 
     /**
