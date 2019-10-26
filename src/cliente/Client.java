@@ -1,10 +1,16 @@
 package cliente;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateNotYetValidException;
+import java.security.cert.X509Certificate;
 
 /**
  * @author Juan
@@ -187,7 +193,17 @@ public class Client
      */
     public void comunicacion2(String certificado)
     {
-        System.out.println(certificado);
+    	System.out.println(certificado);
+    	byte[] certEntryBytes = certificado.getBytes();
+    	InputStream in = new ByteArrayInputStream(certEntryBytes);
+    	try {
+    		CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+    		X509Certificate cert = (X509Certificate) certFactory.generateCertificate(in);
+			cert.checkValidity();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        System.out.println("Certificado valido");  
     }
 
     /**
