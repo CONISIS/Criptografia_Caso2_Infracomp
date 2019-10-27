@@ -17,16 +17,19 @@ import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.xml.bind.DatatypeConverter;
 
 /**
  * @author Juan
+ * @author Andres
  */
 public class Client
 {
@@ -255,7 +258,7 @@ public class Client
 			System.out.println("Hubo un error al cifrar el mensaje");
 		}
     	
-    	
+    	//crear multiplos de 4
     	while(reto.length()%4!=0){
     		reto=reto+"0";
     	}
@@ -294,7 +297,8 @@ public class Client
      */
     public void comunicacion3()
     {
-
+    	
+    	//crear multiplos de 4
     	while(cc.length()%4!=0){
     		cc=cc+"0";
     	}
@@ -330,7 +334,46 @@ public class Client
      */
     public void comunicacion4()
     {
+    	
+    	
+    	
+    	Cipher cifrador;
+		try {
+			cifrador = Cipher.getInstance(simetrico);
+		
+			//descifra el valor
+			cifrador.init(Cipher.DECRYPT_MODE, KS);
+			byte[] valorDescifrado = cifrador.doFinal(DatatypeConverter.parseBase64Binary(getInServidor().readLine()));
+			DatatypeConverter.printBase64Binary(valorDescifrado);
+			
+			//descifra el hmac
+			cifrador = Cipher.getInstance(RSA);
+			cifrador.init(Cipher.DECRYPT_MODE, KW);
+			byte[] macu = cifrador.doFinal(DatatypeConverter.parseBase64Binary(getInServidor().readLine()));
+			
+			//calcula hmac
+	    	Mac mc = Mac.getInstance(hmac);
+			mc.init( KS);
+			byte[] mac = mc.doFinal(valorDescifrado);
+			
+			//compara hmacs
+			if(Arrays.equals(macu,mac)){
+				System.out.println("Valor confirmado por hmac");
+				getOut().println(OK);
+			}
+			else{
+				System.out.println("Hmac invalido... terminado conexion");
+				getOut().println(ERROR);
+				System.exit(0);
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+    	
     }
+    
     public static void imprimirByte(byte[] a){
     	for (int i = 0; i < a.length-1; i++) {
 			System.out.print(a[i]+" ");
