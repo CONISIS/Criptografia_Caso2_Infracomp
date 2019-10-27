@@ -82,6 +82,8 @@ public class Client
     private String simetrico = "";
     
     private Key KW;
+    
+    private SecretKey KS;
 
     // CONSTRUCTOR
 
@@ -213,7 +215,7 @@ public class Client
      */
     public void comunicacion2(String certificado)
     {
-    	//byte[] certEntryBytes = Base64.getDecoder().decode(certificado);
+    	//Recibir y verificar certificado
     	byte[] certEntryBytes = DatatypeConverter.parseBase64Binary(certificado);
     	InputStream in = new ByteArrayInputStream(certEntryBytes);
     	X509Certificate cert = null;
@@ -228,18 +230,18 @@ public class Client
         	System.exit(0);
 		}
     	
+    	// Generar llave simetrica y enviarla
     	KW =  cert.getPublicKey();
-    	byte[] textoCifrado = null;
     	byte[] retoCifrado = null;
     	try {
 
     		KeyGenerator keyGen = KeyGenerator.getInstance(simetrico);
-    	    SecretKey key = keyGen.generateKey();
+    	    KS = keyGen.generateKey();
     		
     		
 			Cipher cifrador = Cipher.getInstance("RSA");
 			cifrador.init(Cipher.ENCRYPT_MODE, KW);
-			retoCifrado = cifrador.doFinal(key.getEncoded());
+			retoCifrado = cifrador.doFinal(KS.getEncoded());
 			
 			String mensaje = DatatypeConverter.printBase64Binary(retoCifrado);
 			getOut().println(mensaje);
@@ -248,6 +250,7 @@ public class Client
 			e.printStackTrace();
 			System.out.println("Hubo un error al cifrar el mensaje");
 		}
+    	
     	//Envia reto
     	getOut().println(RETO);
 	
@@ -263,6 +266,24 @@ public class Client
     public void comunicacion3()
     {
     	
+    	Cipher cifrador;
+		try {
+			cifrador = Cipher.getInstance(simetrico);
+			cifrador.init(Cipher.DECRYPT_MODE, KS);
+			byte[] retoDescifrado = cifrador.doFinal(DatatypeConverter.parseBase64Binary(getInServidor().readLine()));
+			
+			if(RETO.equals(DatatypeConverter.printBase64Binary(retoDescifrado))){
+				System.out.println("Reto validado");
+				getOut().println(OK);
+			}
+			else{
+				System.out.println("El reto no es valido... terminando conexion");
+				getOut().println(ERROR);
+	        	System.exit(0);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
     }
 
     /**
