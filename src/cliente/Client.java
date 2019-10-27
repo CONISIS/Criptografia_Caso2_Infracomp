@@ -297,7 +297,21 @@ public class Client
      */
     public void comunicacion3()
     {
-    	
+    	//input
+        
+        try {
+        	System.out.println("Escriba su cc");
+			cc = getInUsuario().readLine();
+		
+        
+	        System.out.println("Escriba su clave");
+	        clave = getInUsuario().readLine();
+        
+        } catch (IOException e1) {
+			e1.printStackTrace();
+		}
+        
+        
     	//crear multiplos de 4
     	while(cc.length()%4!=0){
     		cc=cc+"0";
@@ -344,7 +358,7 @@ public class Client
 			//descifra el valor
 			cifrador.init(Cipher.DECRYPT_MODE, KS);
 			byte[] valorDescifrado = cifrador.doFinal(DatatypeConverter.parseBase64Binary(getInServidor().readLine()));
-			DatatypeConverter.printBase64Binary(valorDescifrado);
+			System.out.println("Monto ahorrado: "+DatatypeConverter.printBase64Binary(valorDescifrado));
 			
 			//descifra el hmac
 			cifrador = Cipher.getInstance(RSA);
