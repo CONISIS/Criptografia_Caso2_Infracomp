@@ -64,8 +64,6 @@ public class Client
 
     public static final String SHA512 = "HMACSHA512";
     
-    //CONSTANTES
-    public static final String RETO = "RETO";
 
     // ATRIBUTOS
 
@@ -84,6 +82,12 @@ public class Client
     private Key KW;
     
     private SecretKey KS;
+    
+    public String reto = "reto";
+    
+    public String cc = "20876";
+    
+    public String clave = "holas";
 
     // CONSTRUCTOR
 
@@ -251,29 +255,24 @@ public class Client
 			System.out.println("Hubo un error al cifrar el mensaje");
 		}
     	
+    	
+    	while(reto.length()%4!=0){
+    		reto=reto+"0";
+    	}
+    	
+    	
     	//Envia reto
-    	getOut().println(RETO);
+    	getOut().println(reto);
 	
-    	
-   
-    }
-    
-    
-
-    /**
-     * Etapa 3 del protocolo de comunicación, se autenticará al cliente.
-     */
-    public void comunicacion3()
-    {
-    	
+    	//Validar reto
     	Cipher cifrador;
 		try {
 			cifrador = Cipher.getInstance(simetrico);
 			cifrador.init(Cipher.DECRYPT_MODE, KS);
 			byte[] retoDescifrado = cifrador.doFinal(DatatypeConverter.parseBase64Binary(getInServidor().readLine()));
 			
-			if(RETO.equals(DatatypeConverter.printBase64Binary(retoDescifrado))){
-				System.out.println("Reto validado");
+			if(reto.equals(DatatypeConverter.printBase64Binary(retoDescifrado))){
+				System.out.println("reto validado");
 				getOut().println(OK);
 			}
 			else{
@@ -285,7 +284,47 @@ public class Client
 			e.printStackTrace();
 		}
     }
+   
 
+    
+    
+
+    /**
+     * Etapa 3 del protocolo de comunicación, se autenticará al cliente.
+     */
+    public void comunicacion3()
+    {
+
+    	while(cc.length()%4!=0){
+    		cc=cc+"0";
+    	}
+    	
+    	while(clave.length()%4!=0){
+    		clave=clave+"0";
+    	}
+    	
+    	Cipher cifrador;
+		try {
+			
+			//enviar cc
+			cifrador = Cipher.getInstance(simetrico);
+			cifrador.init(Cipher.ENCRYPT_MODE, KS);
+			byte[] ccCifrado = cifrador.doFinal(DatatypeConverter.parseBase64Binary(cc));
+			String mensaje = DatatypeConverter.printBase64Binary(ccCifrado);
+			getOut().println(mensaje);
+	    	
+			//enviar clave
+			cifrador = Cipher.getInstance(simetrico);
+			cifrador.init(Cipher.ENCRYPT_MODE, KS);
+			byte[] claveCifrado = cifrador.doFinal(DatatypeConverter.parseBase64Binary(clave));
+			mensaje = DatatypeConverter.printBase64Binary(claveCifrado);
+			getOut().println(mensaje);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+    }
     /**
      * Etapa 4 del protooolo de comunicación, se solicita información y se valifa la respuesta.
      */
