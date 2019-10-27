@@ -7,7 +7,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.cert.CertificateExpiredException;
@@ -17,7 +20,10 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.xml.bind.DatatypeConverter;
 
 /**
  * @author Juan
@@ -57,6 +63,9 @@ public class Client
     public static final String SHA384 = "HMACSHA384";
 
     public static final String SHA512 = "HMACSHA512";
+    
+    //CONSTANTES
+    public static final String RETO = "RETO";
 
     // ATRIBUTOS
 
@@ -71,6 +80,8 @@ public class Client
     private String hmac = "";
     
     private String simetrico = "";
+    
+    private Key KW;
 
     // CONSTRUCTOR
 
@@ -202,7 +213,8 @@ public class Client
      */
     public void comunicacion2(String certificado)
     {
-    	byte[] certEntryBytes = Base64.getDecoder().decode(certificado);
+    	//byte[] certEntryBytes = Base64.getDecoder().decode(certificado);
+    	byte[] certEntryBytes = DatatypeConverter.parseBase64Binary(certificado);
     	InputStream in = new ByteArrayInputStream(certEntryBytes);
     	X509Certificate cert = null;
     	try {
@@ -216,27 +228,41 @@ public class Client
         	System.exit(0);
 		}
     	
-    	Key KW =  cert.getPublicKey();
+    	KW =  cert.getPublicKey();
     	byte[] textoCifrado = null;
+    	byte[] retoCifrado = null;
     	try {
+
+    		KeyGenerator keyGen = KeyGenerator.getInstance(simetrico);
+    	    SecretKey key = keyGen.generateKey();
+    		
+    		
 			Cipher cifrador = Cipher.getInstance("RSA");
 			cifrador.init(Cipher.ENCRYPT_MODE, KW);
-			textoCifrado = cifrador.doFinal(Base64.getDecoder().decode(simetrico));
-			if(simetrico==AES) {
-				textoCifrado = cifrador.doFinal(Base64.getDecoder().decode(AES+"0"));
-			}
+			retoCifrado = cifrador.doFinal(key.getEncoded());
+			
+			String mensaje = DatatypeConverter.printBase64Binary(retoCifrado);
+			getOut().println(mensaje);
+			
 		} catch (Exception e) {
-			System.out.println("Hubo un error cifrar el mensaje");
+			e.printStackTrace();
+			System.out.println("Hubo un error al cifrar el mensaje");
 		}
-    	getOut().println(textoCifrado);
+    	//Envia reto
+    	getOut().println(RETO);
+	
     	
+   
     }
+    
+    
 
     /**
      * Etapa 3 del protocolo de comunicación, se autenticará al cliente.
      */
     public void comunicacion3()
     {
+    	
     }
 
     /**
@@ -244,5 +270,11 @@ public class Client
      */
     public void comunicacion4()
     {
+    }
+    public static void imprimirByte(byte[] a){
+    	for (int i = 0; i < a.length-1; i++) {
+			System.out.print(a[i]+" ");
+		}
+    	System.out.println(a[a.length-1]+" ");
     }
 }
